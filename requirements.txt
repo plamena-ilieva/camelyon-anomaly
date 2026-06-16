@@ -1,0 +1,15 @@
+# Runtime
+numpy
+matplotlib
+scikit-learn
+scikit-image
+torch
+torchvision
+torchmetrics
+Pillow
+openslide-python
+streamlit
+# Development
+yapf
+coverage
+pytest

@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# Виртуални среди
+.venv/
+venv/
+env/
+
+# Данни (НЕ качвай whole-slide изображения и патчове в git!)
+DATA/
+camelyon_raw/
+*.tif
+*.svs
+*.npz
+*.pt
+*.pth
+
+# Генерирани фигури/изходи
+figures/
+*.png
+!assets/**/*.png
+
+# Системни / IDE
+.DS_Store
+.ipynb_checkpoints/
+.vscode/
+.idea/
