@@ -67,6 +67,18 @@ class TestPatchDataset(unittest.TestCase):
         self.assertEqual(image.shape, (3, 96, 96))
         self.assertIsInstance(label, int)
 
+    def test_when_train_transform_then_returns_normalized_tensor(self):
+        # Arrange
+        patches, labels = _fake_patches()
+        dataset = data.PatchDataset(patches, labels, transform=data.default_transform(train=True))
+
+        # Act
+        image, _ = dataset[0]
+
+        # Assert
+        self.assertIsInstance(image, torch.Tensor)
+        self.assertEqual(image.shape, (3, 96, 96))
+
     def test_when_lengths_mismatch_then_raises_value_error(self):
         # Arrange
         patches, _ = _fake_patches(n=4)

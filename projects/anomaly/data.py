@@ -29,18 +29,19 @@ def default_transform(train: bool = False) -> transforms.Compose:
 
     При ``train=True`` добавя леки аугментации (флипове, ротации), подходящи за
     хистопатология, при която ориентацията няма значение.
+
+    Входът е numpy ``uint8`` масив (H x W x 3). ``ToTensor`` е първо, защото
+    новите версии на torchvision искат аугментациите да работят върху тензор
+    (или PIL), не върху numpy масив.
     """
-    steps: list = []
+    steps: list = [transforms.ToTensor()]
     if train:
         steps += [
             transforms.RandomHorizontalFlip(),
             transforms.RandomVerticalFlip(),
             transforms.RandomRotation(15),
         ]
-    steps += [
-        transforms.ToTensor(),
-        transforms.Normalize(IMAGENET_MEAN, IMAGENET_STD),
-    ]
+    steps += [transforms.Normalize(IMAGENET_MEAN, IMAGENET_STD)]
     return transforms.Compose(steps)
 
 
