@@ -27,8 +27,12 @@ NORMAL, TUMOR = 0, 1
 def default_transform(train: bool = False) -> transforms.Compose:
     """Трансформации за патч изображения.
 
-    При ``train=True`` добавя леки аугментации (флипове, ротации), подходящи за
-    хистопатология, при която ориентацията няма значение.
+    При ``train=True`` добавя аугментации:
+
+    * флипове и ротации -- ориентацията на патча няма значение;
+    * ``ColorJitter`` (stain augmentation) -- H&E оцветяването варира между
+      лаборатории/пациенти; това учи модела да е инвариантен към цвета вместо
+      да "познава слайда", което е честа причина за слаба генерализация.
 
     Входът е numpy ``uint8`` масив (H x W x 3). ``ToTensor`` е първо, защото
     новите версии на torchvision искат аугментациите да работят върху тензор
@@ -40,6 +44,7 @@ def default_transform(train: bool = False) -> transforms.Compose:
             transforms.RandomHorizontalFlip(),
             transforms.RandomVerticalFlip(),
             transforms.RandomRotation(15),
+            transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, hue=0.1),
         ]
     steps += [transforms.Normalize(IMAGENET_MEAN, IMAGENET_STD)]
     return transforms.Compose(steps)
