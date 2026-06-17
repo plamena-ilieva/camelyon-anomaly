@@ -131,6 +131,81 @@ def extract_tiles(slide_path: str,
     return tiles
 
 
+def extract_tiles_balanced(slide_path: str,
+                           tile_size: int = 96,
+                           level: int = 0,
+                           annotation_path: str | None = None,
+                           n_tumor: int = 1000,
+                           n_normal: int = 1000,
+                           tissue_fraction: float = 0.5,
+                           max_attempts_factor: int = 50,
+                           seed: int = 0) -> list[tuple[np.ndarray, int]]:
+    """Насочено семплиране на патчове от един whole-slide image.
+
+    За разлика от :func:`extract_tiles` (последователно сканиране с лимит, което
+    пропуска малките лезии), тук:
+
+    * TUMOR патчовете се семплират с център **вътре в анотираните полигони** ->
+      гарантирано попадаме в лезията.
+    * NORMAL патчовете се семплират на случайни тъканни места **извън** всички
+      полигони.
+
+    Подава се случайно семплиране (не пълно сканиране), затова е бързо дори за
+    слайдове от по няколко GB. Координатите на openslide ``read_region`` са в
+    референтна система на ниво 0, затова работим в ниво-0 пиксели.
+    """
+    import openslide  # ленив импорт -- тежка нативна зависимост
+
+    rng = np.random.default_rng(seed)
+    slide = openslide.OpenSlide(slide_path)
+    downsample = slide.level_downsamples[level]
+    width0, height0 = slide.level_dimensions[0]
+    span = int(tile_size * downsample)  # ниво-0 пиксели, покрити от един патч
+    polygons = read_annotations(annotation_path) if annotation_path else []
+
+    def read_tile(x0: float, y0: float) -> np.ndarray:
+        region = slide.read_region((int(x0), int(y0)), level, (tile_size, tile_size))
+        return np.array(region.convert('RGB'))
+
+    tiles: list[tuple[np.ndarray, int]] = []
+
+    # --- TUMOR: центрове вътре в полигоните ---
+    if polygons and n_tumor > 0:
+        attempts = 0
+        while sum(1 for _, l in tiles if l == TUMOR) < n_tumor \
+                and attempts < n_tumor * max_attempts_factor:
+            attempts += 1
+            poly = polygons[rng.integers(len(polygons))]
+            cx = rng.uniform(poly[:, 0].min(), poly[:, 0].max())
+            cy = rng.uniform(poly[:, 1].min(), poly[:, 1].max())
+            if not point_in_polygons(cx, cy, [poly]):
+                continue
+            x0, y0 = cx - span / 2, cy - span / 2
+            if x0 < 0 or y0 < 0 or x0 + span >= width0 or y0 + span >= height0:
+                continue
+            rgb = read_tile(x0, y0)
+            if tissue_mask(rgb).mean() >= tissue_fraction:
+                tiles.append((rgb, TUMOR))
+
+    # --- NORMAL: случайни тъканни места извън полигоните ---
+    if n_normal > 0:
+        attempts = 0
+        while sum(1 for _, l in tiles if l == NORMAL) < n_normal \
+                and attempts < n_normal * max_attempts_factor:
+            attempts += 1
+            x0 = rng.integers(0, max(1, width0 - span))
+            y0 = rng.integers(0, max(1, height0 - span))
+            cx, cy = x0 + span / 2, y0 + span / 2
+            if polygons and point_in_polygons(cx, cy, polygons):
+                continue
+            rgb = read_tile(x0, y0)
+            if tissue_mask(rgb).mean() >= tissue_fraction:
+                tiles.append((rgb, NORMAL))
+
+    slide.close()
+    return tiles
+
+
 class PatchDataset(Dataset):
     """Датасет от RGB патчове и бинарни етикети (NORMAL/TUMOR).
 
