@@ -57,9 +57,15 @@ _Използвай `projects/anomaly/eda.py` (summarize, plot_class_distributio
 
 ## 6. Автоенкодер U-Net (стъпка 5)
 
-- `models.UNetAutoencoder`, трениран само на normal патчове
-- Anomaly score = MSE на реконструкцията (`train.reconstruction_error`)
-- Праг и ROC/AUC за разделяне normal/tumor: _фигура_
+- `models.UNetAutoencoder`, трениран само на normal патчове (10 епохи,
+  recon MSE пада до ~0.0007).
+- Anomaly score = MSE на реконструкцията (`train.reconstruction_error`).
+- Резултат: normal MSE **0.0006**, tumor MSE **0.0004** — score-ът е **обърнат**
+  (tumor се реконструира по-добре), ROC AUC < 0.5.
+- Извод: reconstruction-based anomaly detection **не работи** за тези данни.
+  Нормалната лимфна тъкан е структурно по-богата → по-трудна за реконструкция;
+  туморните региони са по-хомогенни → по-лесни. Supervised CNN/VGG далеч
+  превъзхожда. Валиден отрицателен резултат.
 
 ## 7. Сравнение и изводи
 
@@ -72,7 +78,7 @@ _Използвай `projects/anomaly/eda.py` (summarize, plot_class_distributio
 | SimpleCNN | 0.934 | 0.869 | базова мрежа; стабилна след stain аугментация |
 | **VGG11** | **0.962** | **0.924** | **най-добър** — добър баланс дълбочина/параметри |
 | VGG16 | 0.955 | 0.911 | по-дълбок, но леко overfit при малко пациенти |
-| U-Net (recon.) | — | — | recon MSE: normal 0.0018, tumor 0.0006 (обърнато) |
+| U-Net (recon.) | — | — | recon MSE: normal 0.0006, tumor 0.0004 (обърнато, AUC<0.5) |
 
 ### Ключово наблюдение: изтичане на информация (data leakage)
 
