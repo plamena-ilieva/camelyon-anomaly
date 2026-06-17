@@ -19,10 +19,13 @@ def pixel_statistics(patches: list[np.ndarray] | np.ndarray) -> dict[str, list[f
 
     Полезно за избор на нормализация и за откриване на цветови вариации между
     слайдове (различно оцветяване -- честа аномалия в хистопатологията).
+
+    Усреднява се в ``float64``: при милиони пиксели float32 акумулаторът губи
+    точност и каналните средни излизат грешни (дори идентични).
     """
     stacked = np.stack([np.asarray(p, dtype=np.float32) / 255.0 for p in patches])
-    mean = stacked.mean(axis=(0, 1, 2))
-    std = stacked.std(axis=(0, 1, 2))
+    mean = stacked.mean(axis=(0, 1, 2), dtype=np.float64)
+    std = stacked.std(axis=(0, 1, 2), dtype=np.float64)
     return {'mean': mean.tolist(), 'std': std.tolist()}
 
 
