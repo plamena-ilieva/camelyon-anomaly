@@ -44,7 +44,8 @@ def main() -> None:  # pragma: no cover -- интерактивен Streamlit в
     st.write('Качи патч от хистологичен слайд. Моделът предсказва tumor / normal.')
 
     model_path = st.sidebar.text_input('Път до модел (.pt)', 'model.pt')
-    arch = st.sidebar.selectbox('Архитектура', ['SimpleCNN', 'VGG11', 'VGG13', 'VGG16'])
+    arch_hint = st.sidebar.selectbox('Архитектура (ако не е записана в .pt)',
+                                     ['VGG11', 'VGG13', 'VGG16', 'SimpleCNN'])
 
     uploaded = st.file_uploader('Изображение (PNG/JPG)', type=['png', 'jpg', 'jpeg'])
     if uploaded is None:
@@ -54,10 +55,11 @@ def main() -> None:  # pragma: no cover -- интерактивен Streamlit в
     image = Image.open(uploaded).convert('RGB')
     st.image(image, caption='Вход', width=256)
 
-    model = _load_model(model_path, arch)
+    model, arch = _load_model(model_path, arch_hint)
     if model is None:
         st.warning('Няма зареден модел. Посочи валиден .pt файл в страничната лента.')
         return
+    st.caption(f'Архитектура: {arch}')
 
     result = predict_patch(model, np.array(image))
     st.subheader(f'Резултат: **{CLASS_NAMES[result["label"]]}**')
@@ -65,16 +67,32 @@ def main() -> None:  # pragma: no cover -- интерактивен Streamlit в
     st.progress(result['prob_tumor'])
 
 
-def _load_model(path: str, arch: str) -> nn.Module | None:  # pragma: no cover
-    import os
-
+def _build_model(arch: str) -> nn.Module:
+    """Създава модел по име на архитектура."""
     from projects.anomaly.models import VGG, SimpleCNN
 
+    return SimpleCNN() if arch == 'SimpleCNN' else VGG(config=arch)
+
+
+def _load_model(path: str, arch_hint: str = 'VGG11') -> tuple[nn.Module | None, str | None]:
+    """Зарежда модел от ``.pt``.
+
+    Поддържа два формата: суров ``state_dict`` (ползва ``arch_hint``) или
+    чекпойнт-речник ``{'arch': ..., 'state_dict': ...}`` (записан от notebook-а).
+    """
+    import os
+
     if not os.path.exists(path):
-        return None
-    model = SimpleCNN() if arch == 'SimpleCNN' else VGG(config=arch)
-    model.load_state_dict(torch.load(path, map_location='cpu'))
-    return model
+        return None, None
+    checkpoint = torch.load(path, map_location='cpu')
+    if isinstance(checkpoint, dict) and 'state_dict' in checkpoint:
+        arch = checkpoint.get('arch', arch_hint)
+        state = checkpoint['state_dict']
+    else:
+        arch, state = arch_hint, checkpoint
+    model = _build_model(arch)
+    model.load_state_dict(state)
+    return model, arch
 
 
 if __name__ == '__main__':  # pragma: no cover
