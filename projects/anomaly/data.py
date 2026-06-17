@@ -139,7 +139,9 @@ def extract_tiles_balanced(slide_path: str,
                            n_normal: int = 1000,
                            tissue_fraction: float = 0.5,
                            max_attempts_factor: int = 50,
-                           seed: int = 0) -> list[tuple[np.ndarray, int]]:
+                           seed: int = 0,
+                           verbose: bool = False,
+                           log_every: int = 200) -> list[tuple[np.ndarray, int]]:
     """Насочено семплиране на патчове от един whole-slide image.
 
     За разлика от :func:`extract_tiles` (последователно сканиране с лимит, което
@@ -162,6 +164,14 @@ def extract_tiles_balanced(slide_path: str,
     width0, height0 = slide.level_dimensions[0]
     span = int(tile_size * downsample)  # ниво-0 пиксели, покрити от един патч
     polygons = read_annotations(annotation_path) if annotation_path else []
+    name = os.path.basename(slide_path)
+
+    def log(msg: str) -> None:
+        if verbose:
+            print(msg, flush=True)
+
+    log(f'[{name}] ниво={level} (downsample x{downsample:.0f}), ниво-0 {width0}x{height0}px, '
+        f'патч={span}px@ниво-0, полигони={len(polygons)}')
 
     def read_tile(x0: float, y0: float) -> np.ndarray:
         region = slide.read_region((int(x0), int(y0)), level, (tile_size, tile_size))
@@ -171,9 +181,9 @@ def extract_tiles_balanced(slide_path: str,
 
     # --- TUMOR: центрове вътре в полигоните ---
     if polygons and n_tumor > 0:
-        attempts = 0
-        while sum(1 for _, l in tiles if l == TUMOR) < n_tumor \
-                and attempts < n_tumor * max_attempts_factor:
+        kept = attempts = 0
+        max_attempts = n_tumor * max_attempts_factor
+        while kept < n_tumor and attempts < max_attempts:
             attempts += 1
             poly = polygons[rng.integers(len(polygons))]
             cx = rng.uniform(poly[:, 0].min(), poly[:, 0].max())
@@ -186,12 +196,21 @@ def extract_tiles_balanced(slide_path: str,
             rgb = read_tile(x0, y0)
             if tissue_mask(rgb).mean() >= tissue_fraction:
                 tiles.append((rgb, TUMOR))
+                kept += 1
+                if kept % log_every == 0:
+                    log(f'[{name}]   tumor {kept}/{n_tumor} (опити: {attempts})')
+        log(f'[{name}] tumor: {kept} патча от {attempts} опита')
+        if kept < n_tumor:
+            log(f'[{name}] ВНИМАНИЕ: само {kept}/{n_tumor} tumor патча (лезията е малка '
+                f'или max_attempts_factor е нисък)')
+    elif n_tumor > 0 and not polygons:
+        log(f'[{name}] няма полигони -> 0 tumor патча (очаквано за normal слайд)')
 
     # --- NORMAL: случайни тъканни места извън полигоните ---
     if n_normal > 0:
-        attempts = 0
-        while sum(1 for _, l in tiles if l == NORMAL) < n_normal \
-                and attempts < n_normal * max_attempts_factor:
+        kept = attempts = 0
+        max_attempts = n_normal * max_attempts_factor
+        while kept < n_normal and attempts < max_attempts:
             attempts += 1
             x0 = rng.integers(0, max(1, width0 - span))
             y0 = rng.integers(0, max(1, height0 - span))
@@ -201,6 +220,10 @@ def extract_tiles_balanced(slide_path: str,
             rgb = read_tile(x0, y0)
             if tissue_mask(rgb).mean() >= tissue_fraction:
                 tiles.append((rgb, NORMAL))
+                kept += 1
+                if kept % log_every == 0:
+                    log(f'[{name}]   normal {kept}/{n_normal} (опити: {attempts})')
+        log(f'[{name}] normal: {kept} патча от {attempts} опита')
 
     slide.close()
     return tiles
