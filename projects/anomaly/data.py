@@ -230,6 +230,36 @@ def extract_tiles_balanced(slide_path: str,
     return tiles
 
 
+def grouped_train_val_split(labels: list[int] | np.ndarray,
+                            groups: list | np.ndarray,
+                            val_fraction: float = 0.3,
+                            seed: int = 0) -> tuple[list[int], list[int]]:
+    """Train/val индекси **без изтичане**: нито една група (слайд/пациент) не е
+    едновременно в train и val.
+
+    Това е истинският тест за генерализация при CAMELYON -- ако патчове от един
+    и същ слайд попаднат и в train, и в val, моделът може да "познава слайда" по
+    оцветяването вместо да засича тумора, и метриките излизат фалшиво високи.
+
+    Разделя поотделно за всеки клас, за да присъстват и двата класа във val.
+    """
+    rng = np.random.default_rng(seed)
+    labels = np.asarray(labels)
+    groups = np.asarray(groups)
+    train_idx: list[int] = []
+    val_idx: list[int] = []
+    for cls in np.unique(labels):
+        cls_groups = np.unique(groups[labels == cls])
+        rng.shuffle(cls_groups)
+        n_val_groups = max(1, round(len(cls_groups) * val_fraction))
+        val_groups = set(cls_groups[:n_val_groups].tolist())
+        for i in np.where(labels == cls)[0]:
+            (val_idx if groups[i] in val_groups else train_idx).append(int(i))
+    rng.shuffle(train_idx)
+    rng.shuffle(val_idx)
+    return train_idx, val_idx
+
+
 class PatchDataset(Dataset):
     """Датасет от RGB патчове и бинарни етикети (NORMAL/TUMOR).
 

@@ -79,6 +79,20 @@ class TestPatchDataset(unittest.TestCase):
         self.assertIsInstance(image, torch.Tensor)
         self.assertEqual(image.shape, (3, 96, 96))
 
+    def test_when_grouped_split_then_no_group_in_both_sets(self):
+        # Arrange
+        labels = np.array([0, 0, 1, 1, 0, 0, 1, 1])
+        groups = np.array(['a', 'a', 'b', 'b', 'c', 'c', 'd', 'd'])
+
+        # Act
+        train_idx, val_idx = data.grouped_train_val_split(labels, groups, val_fraction=0.5, seed=0)
+
+        # Assert
+        train_groups = set(groups[train_idx])
+        val_groups = set(groups[val_idx])
+        self.assertTrue(train_groups.isdisjoint(val_groups))
+        self.assertEqual(set(labels[val_idx]), {0, 1})  # и двата класа във val
+
     def test_when_lengths_mismatch_then_raises_value_error(self):
         # Arrange
         patches, _ = _fake_patches(n=4)
