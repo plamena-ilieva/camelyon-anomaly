@@ -58,24 +58,46 @@ def fit(model: nn.Module,
         val_loader: DataLoader | None = None,
         num_epochs: int = 10,
         lr: float = 1e-3,
-        device: torch.device | None = None) -> dict[str, list]:
+        device: torch.device | None = None,
+        restore_best: bool = True) -> dict[str, list]:
     """Обучава класификатор и връща история по епохи.
 
-    История: {'train_loss': [...], 'val_accuracy': [...], 'val_cohen_kappa': [...]}.
+    История: {'train_loss', 'val_accuracy', 'val_cohen_kappa', 'best_epoch',
+    'best_val_cohen_kappa'}.
+
+    При ``restore_best=True`` (и наличен ``val_loader``) накрая се възстановяват
+    теглата от епохата с **най-висок val Cohen Kappa**, а не последните. Това е
+    важно при нестабилна val крива (малък val сет), при която последната епоха е
+    случайна -- иначе докладваме по-слаб модел от реално най-добрия.
     """
+    import copy
+
     device = device or get_device()
     model.to(device)
     optimizer = torch.optim.AdamW(model.parameters(), lr=lr)
     criterion = nn.CrossEntropyLoss()
 
     history: dict[str, list] = {'train_loss': [], 'val_accuracy': [], 'val_cohen_kappa': []}
-    for _ in range(num_epochs):
+    best_kappa = float('-inf')
+    best_epoch = -1
+    best_state = None
+    for epoch in range(num_epochs):
         train_loss = train_one_epoch(model, train_loader, optimizer, criterion, device)
         history['train_loss'].append(train_loss)
         if val_loader is not None:
             scores = evaluate(model, val_loader, device)
             history['val_accuracy'].append(scores['accuracy'])
             history['val_cohen_kappa'].append(scores['cohen_kappa'])
+            if scores['cohen_kappa'] > best_kappa:
+                best_kappa = scores['cohen_kappa']
+                best_epoch = epoch
+                if restore_best:
+                    best_state = copy.deepcopy(model.state_dict())
+
+    if best_state is not None:
+        model.load_state_dict(best_state)
+        history['best_epoch'] = best_epoch
+        history['best_val_cohen_kappa'] = best_kappa
     return history
 
 
