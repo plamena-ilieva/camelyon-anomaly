@@ -31,3 +31,10 @@ figures/
 .ipynb_checkpoints/
 .vscode/
 .idea/
+
+# Node / build artifacts
+node_modules/
+build_deck/node_modules/
+build_deck/package*.json
+*.pdf
+docs/slide-*.jpg
