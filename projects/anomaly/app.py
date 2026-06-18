@@ -9,6 +9,15 @@
 тества без да се вдига Streamlit (виж tests/test_anomaly_app.py).
 """
 
+import os
+import sys
+
+# Добави корена на репото в sys.path, за да работи `streamlit run` отвсякъде
+# (streamlit слага в пътя папката на скрипта, не корена на проекта).
+_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+if _ROOT not in sys.path:
+    sys.path.insert(0, _ROOT)
+
 import numpy as np
 import torch
 from torch import nn
