@@ -161,9 +161,9 @@ s.addText([
 
 // ---------- Slide 8: Резултати ----------
 s = pres.addSlide();
-title(s, "Резултати — невиждани пациенти", "Cohen Kappa, patient-level split, най-добър checkpoint");
+title(s, "Резултати — невиждани пациенти", "Cohen Kappa · 30 пациента · 44 321 патча · patient-level split");
 s.addChart(pres.charts.BAR, [
-  { name: "Cohen Kappa", labels: ["SimpleCNN", "VGG11", "VGG16"], values: [0.869, 0.924, 0.911] },
+  { name: "Cohen Kappa", labels: ["SimpleCNN", "VGG11", "VGG16"], values: [0.725, 0.797, 0.724] },
 ], {
   x: 0.6, y: 1.5, w: 5.6, h: 3.4, barDir: "col", chartColors: [PLUM, ROSE, PLUM],
   showValue: true, dataLabelPosition: "outEnd", dataLabelColor: INK, dataLabelFontSize: 12, dataLabelFormatCode: "0.000",
@@ -171,11 +171,11 @@ s.addChart(pres.charts.BAR, [
   valGridLine: { color: "EEE2EA", size: 0.5 }, showLegend: false, chartArea: { fill: { color: PAPER } },
 });
 card(s, 6.5, 1.7, 2.9, 1.5, PINK);
-s.addText([{ text: "VGG11\n", options: { bold: true, fontSize: 20, color: PLUM, breakLine: true } }, { text: "най-добър · κ = 0.924", options: { fontSize: 14, color: INK } }],
+s.addText([{ text: "VGG11\n", options: { bold: true, fontSize: 20, color: PLUM, breakLine: true } }, { text: "най-добър · κ = 0.797", options: { fontSize: 14, color: INK } }],
   { x: 6.6, y: 1.85, w: 2.7, h: 1.2, align: "center", valign: "middle", fontFace: HEAD });
 s.addText([
   { text: "VGG16 < VGG11 → повече параметри = повече overfitting при малко пациенти.\n\n", options: { breakLine: true } },
-  { text: "CNN се вдигна от случайност (−0.05) до 0.87 след stain аугментация.", options: {} },
+  { text: "CNN се вдигна от случайност (−0.05) до 0.73 след stain аугментация.", options: {} },
 ], { x: 6.5, y: 3.4, w: 2.9, h: 1.6, fontFace: BODY, fontSize: 12.5, color: INK, valign: "top", lineSpacingMultiple: 1.05 });
 
 // ---------- Slide 9: U-Net negative ----------
@@ -236,7 +236,7 @@ s = pres.addSlide();
 s.background = { color: INK };
 s.addText("Изводи", { x: 0.6, y: 0.5, w: 8.8, h: 0.8, fontFace: HEAD, bold: true, fontSize: 32, color: PAPER, margin: 0 });
 s.addText([
-  { text: "VGG11 е най-добрият модел (Cohen Kappa 0.924) на невиждани пациенти.\n", options: { bullet: true, breakLine: true } },
+  { text: "VGG11 е най-добрият модел (Cohen Kappa 0.797 на 30 невиждани пациента).\n", options: { bullet: true, breakLine: true } },
   { text: "Stain аугментацията е критична за генерализация в хистопатологията.\n", options: { bullet: true, breakLine: true } },
   { text: "Patient-level евалуация е задължителна — иначе резултатите са фалшиво високи.\n", options: { bullet: true, breakLine: true } },
   { text: "Reconstruction-based anomaly detection не работи за тези данни (честен отрицателен резултат).", options: { bullet: true } },
