@@ -22,6 +22,7 @@ def evaluate(model: nn.Module,
              device: torch.device | None = None) -> dict[str, float]:
     """Оценява модела върху loader -> {'accuracy', 'cohen_kappa'}."""
     device = device or get_device()
+    model.to(device)  # подсигури, че моделът е на същия device като входа
     model.eval()
     all_true: list[torch.Tensor] = []
     all_pred: list[torch.Tensor] = []
