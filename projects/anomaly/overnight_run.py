@@ -170,6 +170,21 @@ for name, build in specs:
     torch.save({'arch': name, 'state_dict': m.state_dict()}, os.path.join(OUT, f'{name}.pt'))
     log(f'   {name}: {results[name]} | best epoch {h.get("best_epoch")}')
 
+
+def save_outputs():
+    """Запазва най-добрия класификатор + резултатите (извиква се рано и накрая)."""
+    best = max(('SimpleCNN', 'VGG11', 'VGG16'), key=lambda n: results[n]['cohen_kappa'])
+    torch.save({'arch': best, 'state_dict': trained[best].state_dict()},
+               os.path.join(OUT, 'model.pt'))
+    with open(os.path.join(OUT, 'results.json'), 'w') as f:
+        json.dump(results, f, ensure_ascii=False, indent=2)
+    return best
+
+
+# запази веднага щом класификаторите са готови (U-Net е бонус -> да не губим това)
+best_name = save_outputs()
+log('Класификаторите са запазени. Засега най-добър:', best_name, '|', results[best_name])
+
 # ---- 9. U-Net автоенкодер ----
 log('трениране U-Net (автоенкодер) ...')
 recon_tf = data.transforms.Compose([data.transforms.ToTensor()])
@@ -194,27 +209,30 @@ for epoch in range(EPOCHS):
         log(f'   U-Net epoch {epoch}: recon MSE {run / len(normal_loader):.4f}')
 torch.save({'arch': 'UNetAutoencoder', 'state_dict': unet.state_dict()}, os.path.join(OUT, 'UNet.pt'))
 
-# U-Net AUC върху val
-val_t = [P[i] for i in val_idx if labels[i] == data.TUMOR]
-val_n = [P[i] for i in val_idx if labels[i] == data.NORMAL]
+# U-Net AUC върху val (БАТЧОВО -> без CUDA OOM; в try, защото е бонус стъпка)
+val_t = [P[i] for i in val_idx if labels[i] == data.TUMOR][:2000]
+val_n = [P[i] for i in val_idx if labels[i] == data.NORMAL][:2000]
 
 
-def rerr(pl):
-    return train.reconstruction_error(unet, torch.stack([recon_tf(p.astype('uint8')) for p in pl]))
+def rerr(pl, bs=128):
+    out = []
+    for i in range(0, len(pl), bs):
+        batch = torch.stack([recon_tf(p.astype('uint8')) for p in pl[i:i + bs]])
+        out.append(train.reconstruction_error(unet, batch))
+    return torch.cat(out)
 
 
-if val_t and val_n:
-    et, en = rerr(val_t), rerr(val_n)
-    yt = np.concatenate([np.ones(len(et)), np.zeros(len(en))])
-    sc = np.concatenate([et.numpy(), en.numpy()])
-    results['UNet_recon_AUC'] = float(roc_auc_score(yt, sc))
-    log(f'   U-Net recon AUC: {results["UNet_recon_AUC"]:.3f}')
+try:
+    if val_t and val_n:
+        et, en = rerr(val_t), rerr(val_n)
+        yt = np.concatenate([np.ones(len(et)), np.zeros(len(en))])
+        sc = np.concatenate([et.numpy(), en.numpy()])
+        results['UNet_recon_AUC'] = float(roc_auc_score(yt, sc))
+        log(f'   U-Net recon AUC: {results["UNet_recon_AUC"]:.3f}')
+except Exception as e:
+    log('   U-Net AUC пропуснат (грешка):', repr(e))
 
-# ---- 10. запази най-добрия класификатор като model.pt + резултати ----
-best_name = max(('SimpleCNN', 'VGG11', 'VGG16'), key=lambda n: results[n]['cohen_kappa'])
-torch.save({'arch': best_name, 'state_dict': trained[best_name].state_dict()},
-           os.path.join(OUT, 'model.pt'))
-with open(os.path.join(OUT, 'results.json'), 'w') as f:
-    json.dump(results, f, ensure_ascii=False, indent=2)
+# ---- 10. финален запис ----
+best_name = save_outputs()
 log('ГОТОВО. Най-добър:', best_name, '|', results[best_name])
 log('Всичко е в', OUT)
