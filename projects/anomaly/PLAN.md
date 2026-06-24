@@ -33,7 +33,7 @@ docs/
 | 1 | Статии + Cohen Kappa | `docs/MODEL_REPORT.md`, `metrics.py` |
 | 2 | Разглеждане на данните (EDA) | `eda.py`, EDA notebook |
 | 3 | CNN експерименти | `models.SimpleCNN`, `train.py` |
-| 4 | VGG варианти | `models.VGG` (VGG11/13/16 конфигурации) |
+| 4 | VGG варианти | `models.VGG` (VGG11/16 конфигурации) |
 | 5 | Автоенкодер (U-Net) | `models.UNetAutoencoder` |
 | 6 | Streamlit UI + тестове | `app.py`, `tests/` |
 | 7 | Презентация | `docs/` (отделен файл) |

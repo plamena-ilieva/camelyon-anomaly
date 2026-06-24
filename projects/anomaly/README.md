@@ -13,7 +13,7 @@ whole-slide изображения от датасета **CAMELYON17**.
 | `metrics.py` | Cohen Kappa (от нула), confusion matrix, accuracy |
 | `data.py` | WSI tiling (openslide), tissue mask, XML анотации, `PatchDataset` |
 | `eda.py` | разглеждане на данните + визуализации |
-| `models.py` | `SimpleCNN`, `VGG` (11/13/16), `UNetAutoencoder` |
+| `models.py` | `SimpleCNN`, `VGG` (11/16), `UNetAutoencoder` |
 | `train.py` | тренировъчен цикъл, оценка по Cohen Kappa, anomaly score |
 | `app.py` | Streamlit потребителски интерфейс |
 | `colab_camelyon.ipynb` | end-to-end pipeline за Google Colab (GPU) |

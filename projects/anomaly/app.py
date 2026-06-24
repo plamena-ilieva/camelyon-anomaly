@@ -54,7 +54,7 @@ def main() -> None:  # pragma: no cover -- интерактивен Streamlit в
 
     model_path = st.sidebar.text_input('Път до модел (.pt)', 'model.pt')
     arch_hint = st.sidebar.selectbox('Архитектура (ако не е записана в .pt)',
-                                     ['VGG11', 'VGG13', 'VGG16', 'SimpleCNN'])
+                                     ['VGG11', 'VGG16', 'SimpleCNN'])
 
     uploaded = st.file_uploader('Изображение (PNG/JPG)', type=['png', 'jpg', 'jpeg'])
     if uploaded is None:
