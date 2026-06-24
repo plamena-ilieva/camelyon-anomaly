@@ -143,8 +143,8 @@ models.forEach(([t, sub, d], i) => {
 // ---------- Slide 7: Leakage (★) ----------
 s = pres.addSlide();
 s.background = { color: INK };
-s.addText("★ Ключова находка: изтичане на информация", { x: 0.6, y: 0.4, w: 8.8, h: 0.7, fontFace: HEAD, bold: true, fontSize: 28, color: PAPER, margin: 0 });
-s.addText("Методологията се оказа по-важна от архитектурата", { x: 0.62, y: 1.08, w: 8.8, h: 0.4, fontFace: BODY, italic: true, fontSize: 14, color: ROSE, margin: 0 });
+s.addText("Изтичане на информация при оценката", { x: 0.6, y: 0.4, w: 8.8, h: 0.7, fontFace: HEAD, bold: true, fontSize: 28, color: PAPER, margin: 0 });
+s.addText("Влияние на начина на разделяне на данните върху резултата", { x: 0.62, y: 1.08, w: 8.8, h: 0.4, fontFace: BODY, italic: true, fontSize: 14, color: ROSE, margin: 0 });
 s.addTable([
   [{ text: "Постановка", options: { bold: true, color: PAPER, fill: { color: PLUM } } },
    { text: "CNN", options: { bold: true, color: PAPER, fill: { color: PLUM }, align: "center" } },
@@ -171,7 +171,7 @@ s.addChart(pres.charts.BAR, [
   valGridLine: { color: "EEE2EA", size: 0.5 }, showLegend: false, chartArea: { fill: { color: PAPER } },
 });
 card(s, 6.5, 1.7, 2.9, 1.5, PINK);
-s.addText([{ text: "VGG11\n", options: { bold: true, fontSize: 20, color: PLUM, breakLine: true } }, { text: "най-добър · κ = 0.797", options: { fontSize: 14, color: INK } }],
+s.addText([{ text: "VGG11\n", options: { bold: true, fontSize: 20, color: PLUM, breakLine: true } }, { text: "най-висок κ = 0.797", options: { fontSize: 14, color: INK } }],
   { x: 6.6, y: 1.85, w: 2.7, h: 1.2, align: "center", valign: "middle", fontFace: HEAD });
 s.addText([
   { text: "VGG16 < VGG11 → повече параметри = повече overfitting при малко пациенти.\n\n", options: { breakLine: true } },
@@ -215,7 +215,7 @@ bugs.forEach(([t, d], i) => {
 s = pres.addSlide();
 title(s, "Потребителски интерфейс (Streamlit)");
 card(s, 0.6, 1.5, 4.6, 3.3, PAPER);
-s.addText("🔬 Качи патч → предсказание", { x: 0.8, y: 1.7, w: 4.2, h: 0.4, fontFace: HEAD, bold: true, fontSize: 15, color: PLUM });
+s.addText("Качване на патч и предсказание", { x: 0.8, y: 1.7, w: 4.2, h: 0.4, fontFace: HEAD, bold: true, fontSize: 15, color: PLUM });
 s.addShape(pres.shapes.RECTANGLE, { x: 0.9, y: 2.2, w: 1.6, h: 1.6, fill: { color: PINK }, line: { color: ROSE, width: 1 } });
 s.addText("патч", { x: 0.9, y: 2.2, w: 1.6, h: 1.6, align: "center", valign: "middle", fontFace: BODY, fontSize: 12, color: MUTED });
 s.addText([

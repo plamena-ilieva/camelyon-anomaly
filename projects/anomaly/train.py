@@ -108,7 +108,8 @@ def reconstruction_error(model: nn.Module,
                          device: torch.device | None = None) -> torch.Tensor:
     """Anomaly score за U-Net автоенкодера: MSE на реконструкцията на изображение.
 
-    Висока стойност => вероятна аномалия (моделът е виждал само normal патчове).
+    По-висока стойност означава по-вероятна аномалия (моделът е обучен само върху
+    нормални патчове).
     """
     device = device or get_device()
     model.eval()
