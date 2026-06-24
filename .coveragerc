@@ -1,2 +1,10 @@
 [run]
 source = projects
+omit =
+    projects/anomaly/overnight_run.py
+
+[report]
+exclude_also =
+    pragma: no cover
+    if __name__ == .__main__.:
+    def main\(
