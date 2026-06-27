@@ -54,3 +54,22 @@ def accuracy(y_true: torch.Tensor, y_pred: torch.Tensor) -> float:
     if y_true.numel() == 0:
         return 0.0
     return (y_true == y_pred).float().mean().item()
+
+
+def f1_score(y_true: torch.Tensor, y_pred: torch.Tensor, positive: int = 1) -> float:
+    r"""F1 за положителния клас (по подразбиране tumor=1).
+
+    .. math:: F_1 = \frac{2 \cdot TP}{2 \cdot TP + FP + FN}
+
+    Хармонично средно на precision и recall; фокусира се върху откриването на
+    положителния клас (полезна при небалансирани данни). Игнорира true negatives.
+    """
+    y_true = y_true.flatten()
+    y_pred = y_pred.flatten()
+    tp = ((y_pred == positive) & (y_true == positive)).sum().item()
+    fp = ((y_pred == positive) & (y_true != positive)).sum().item()
+    fn = ((y_pred != positive) & (y_true == positive)).sum().item()
+    denominator = 2 * tp + fp + fn
+    if denominator == 0:
+        return 0.0
+    return 2 * tp / denominator

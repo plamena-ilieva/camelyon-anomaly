@@ -74,5 +74,32 @@ class TestAccuracy(unittest.TestCase):
         self.assertAlmostEqual(actual, expected, places=5)
 
 
+class TestF1Score(unittest.TestCase):
+
+    def test_when_perfect_then_f1_is_one(self):
+        # Arrange
+        y_true = torch.tensor([0, 1, 1, 0])
+        y_pred = torch.tensor([0, 1, 1, 0])
+
+        # Act
+        actual = metrics.f1_score(y_true, y_pred)
+
+        # Assert
+        self.assertAlmostEqual(actual, 1.0, places=5)
+
+    def test_when_matches_sklearn_then_close(self):
+        # Arrange
+        y_true = torch.tensor([0, 1, 1, 0, 1, 0, 1, 1])
+        y_pred = torch.tensor([0, 1, 0, 0, 1, 1, 1, 1])
+        from sklearn.metrics import f1_score as sk_f1
+        expected = sk_f1(y_true.numpy(), y_pred.numpy())
+
+        # Act
+        actual = metrics.f1_score(y_true, y_pred)
+
+        # Assert
+        self.assertAlmostEqual(actual, float(expected), places=5)
+
+
 if __name__ == '__main__':
     unittest.main()

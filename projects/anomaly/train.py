@@ -36,6 +36,7 @@ def evaluate(model: nn.Module,
     return {
         'accuracy': metrics.accuracy(y_true, y_pred),
         'cohen_kappa': metrics.cohen_kappa(y_true, y_pred, num_classes=2),
+        'f1': metrics.f1_score(y_true, y_pred),
     }
 
 
