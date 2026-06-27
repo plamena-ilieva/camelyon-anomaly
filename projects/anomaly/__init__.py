@@ -4,7 +4,7 @@
 """
 
 from projects.anomaly import data, eda, metrics, models, train
-from projects.anomaly.models import VGG, SimpleCNN, UNetAutoencoder
+from projects.anomaly.models import VGG, ConvAutoencoder, SimpleCNN, UNetAutoencoder
 
 __all__ = [
     'data',
@@ -15,4 +15,5 @@ __all__ = [
     'SimpleCNN',
     'VGG',
     'UNetAutoencoder',
+    'ConvAutoencoder',
 ]

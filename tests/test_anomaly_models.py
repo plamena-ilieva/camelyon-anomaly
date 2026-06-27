@@ -71,5 +71,31 @@ class TestUNetAutoencoder(unittest.TestCase):
         self.assertEqual(actual.shape, expected_shape)
 
 
+class TestConvAutoencoder(unittest.TestCase):
+
+    def test_when_reconstructing_then_output_shape_equals_input(self):
+        # Arrange
+        model = models.ConvAutoencoder(in_channels=3)
+        x = torch.randn(2, 3, 96, 96)
+
+        # Act
+        actual = model(x)
+
+        # Assert
+        self.assertEqual(actual.shape, x.shape)
+
+    def test_when_forward_then_output_in_unit_range(self):
+        # Arrange — Sigmoid изход => стойности в [0, 1]
+        model = models.ConvAutoencoder(in_channels=3)
+        x = torch.randn(2, 3, 96, 96)
+
+        # Act
+        out = model(x)
+
+        # Assert
+        self.assertGreaterEqual(out.min().item(), 0.0)
+        self.assertLessEqual(out.max().item(), 1.0)
+
+
 if __name__ == '__main__':
     unittest.main()

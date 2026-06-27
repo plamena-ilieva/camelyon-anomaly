@@ -171,3 +171,48 @@ class UNetAutoencoder(nn.Module):
             x = self.ups[idx + 1](x)
 
         return self.final_conv(x)
+
+
+class ConvAutoencoder(nn.Module):
+    """Класически конволюционен автоенкодер **без** skip връзки.
+
+    За разлика от :class:`UNetAutoencoder`, информацията минава през тясно гърло
+    (bottleneck) -- няма пряк път вход->изход. Това принуждава модела да научи
+    разпределението на нормалните патчове и затова е по-подходящ за
+    reconstruction-based anomaly detection: невижданите (tumor) патчове не пасват
+    в наученото нормално -> по-висока грешка на реконструкция.
+
+    Вход/изход (N, 3, 96, 96); изходът минава през Sigmoid -> стойности в [0, 1],
+    за да съвпада с входа (``ToTensor`` дава [0, 1]).
+    """
+
+    def __init__(self, in_channels: int = 3, latent_channels: int = 32) -> None:
+        super().__init__()
+        self.encoder = nn.Sequential(
+            nn.Conv2d(in_channels, 32, kernel_size=4, stride=2, padding=1),  # 96 -> 48
+            nn.BatchNorm2d(32),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(32, 64, kernel_size=4, stride=2, padding=1),  # 48 -> 24
+            nn.BatchNorm2d(64),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(64, 128, kernel_size=4, stride=2, padding=1),  # 24 -> 12
+            nn.BatchNorm2d(128),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(128, latent_channels, kernel_size=1),  # тясно гърло (без skip)
+        )
+        self.decoder = nn.Sequential(
+            nn.Conv2d(latent_channels, 128, kernel_size=1),
+            nn.BatchNorm2d(128),
+            nn.ReLU(inplace=True),
+            nn.ConvTranspose2d(128, 64, kernel_size=4, stride=2, padding=1),  # 12 -> 24
+            nn.BatchNorm2d(64),
+            nn.ReLU(inplace=True),
+            nn.ConvTranspose2d(64, 32, kernel_size=4, stride=2, padding=1),  # 24 -> 48
+            nn.BatchNorm2d(32),
+            nn.ReLU(inplace=True),
+            nn.ConvTranspose2d(32, in_channels, kernel_size=4, stride=2, padding=1),  # 48 -> 96
+            nn.Sigmoid(),
+        )
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        return self.decoder(self.encoder(x))
